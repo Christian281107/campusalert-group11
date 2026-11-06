@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,6 +29,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .meta{font-size:12px;color:#8995a5;margin-top:12px}
 .notice{background:#eaf1fc;padding:16px;border-radius:10px;color:#42556d;font-size:14px}
 .hidden{display:none!important}.status{font-size:13px;margin:8px 0;min-height:20px}.status.error{color:#b42318}.status.ok{color:#147d45}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e8edf4;white-space:nowrap}th{color:var(--primary);background:#f7f9fc}
 footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin-top:45px}footer p{font-size:13px;color:#d5dfed;margin-top:5px}
 .team-member{background:#fff;padding:16px 10px;border-radius:10px;color:#183b68;font-weight:600;box-shadow:0 3px 12px #00000008}
 @media(max-width:650px){header{align-items:flex-start;flex-direction:column}nav{gap:11px}.hero{padding:45px 5%}}
@@ -39,7 +39,7 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
 <header>
   <div class="logo">CampusAlert <span>G11</span></div>
   <nav>
-    <a href="#home">Home</a><a href="#announcements">Announcements</a><a href="#student-access">Student Login</a>
+    <a href="#home">Home</a><a href="#announcements">Announcements</a><a href="#student-access">Portal</a>
     <a href="#services">Services</a><a href="#about">About</a>
   </nav>
 </header>
@@ -73,7 +73,7 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
   </section>
 
   <section class="section" id="student-access">
-    <div class="section-title"><h2>Student Portal</h2><p>Students can register with their registration number and personal email address.</p></div>
+    <div class="section-title"><h2>CampusAlert Portal</h2><p>Students and administrators can sign in here. Students can create an account below.</p></div>
     <div class="grid">
       <div class="card" id="authPanel">
         <h3>Student registration</h3>
@@ -81,17 +81,17 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
           <label for="regNo">Registration number</label><input id="regNo" required autocomplete="off" placeholder="Enter your registration number">
           <label for="signupEmail">Your email address</label><input id="signupEmail" type="email" required autocomplete="email" placeholder="Enter your email">
           <label for="signupPassword">Create password</label><input id="signupPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
-          <button type="submit" id="signupButton">Create account</button>
+          <button type="submit" id="signupButton">Create student account</button>
         </form>
-        <p class="muted">You must use an email address you can access to complete email verification.</p>
+        <p class="muted">Use an email address you can access to complete email verification.</p>
         <hr style="border:0;border-top:1px solid #e8edf4;margin:17px 0">
-        <h3>Already registered?</h3>
+        <h3>Student / Administrator login</h3>
         <form id="loginForm">
           <label for="loginEmail">Email address</label><input id="loginEmail" type="email" required autocomplete="email" placeholder="Your registered email">
           <label for="loginPassword">Password</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Your password">
-          <button type="submit">Log in</button>
+          <button type="submit" id="loginButton">Log in</button>
         </form>
-        <p class="muted">For now, sign-in uses the email address registered with Supabase. Registration-number-only login requires a separate secure lookup function; we will add that after the database setup.</p>
+        <p class="muted">Administrators use their registered admin email and password here too.</p>
         <div id="authStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
@@ -111,19 +111,43 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
           </form>
         </div>
         <p class="muted">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
-        <button type="button" id="logoutButton" class="secondary">Log out</button>
+        <button type="button" id="logoutStudentButton" class="secondary">Log out</button>
         <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="card hidden" id="adminDashboard">
+        <h3>Administrator dashboard</h3>
+        <p id="adminWelcome" class="muted">Administrator access confirmed.</p>
+        <div class="notice" style="margin:13px 0">You are signed in with administrator permissions. Use this area to manage CampusAlert records.</div>
+        <div class="card" style="margin:12px 0">
+          <h3>Student activation PINs</h3>
+          <p class="muted">This list contains unused activation PINs only. Keep it private and share each PIN only with its rightful student.</p>
+          <button type="button" id="loadPinsButton">Load unused student PINs</button>
+          <button type="button" id="downloadPinsButton" class="secondary hidden">Download PIN list (CSV)</button>
+          <div id="pinsStatus" class="status" role="status" aria-live="polite"></div>
+          <div class="table-wrap"><table id="pinsTable" class="hidden">
+            <thead><tr><th>Student name</th><th>Registration number</th><th>Department</th><th>Level</th><th>Activation PIN</th></tr></thead>
+            <tbody id="pinsTableBody"></tbody>
+          </table></div>
+        </div>
+        <div class="grid">
+          <div class="notice"><strong>Announcements</strong><br>Announcement management will be connected after confirming the announcements table.</div>
+          <div class="notice"><strong>Departmental memos</strong><br>Memo sharing will be added with department-based access.</div>
+          <div class="notice"><strong>Academic results</strong><br>Results will be private to each student and authorised administrators.</div>
+          <div class="notice"><strong>Documents</strong><br>Document upload and retrieval will be connected to secure storage.</div>
+        </div>
+        <button type="button" id="logoutAdminButton" class="secondary" style="margin-top:14px">Log out</button>
       </div>
     </div>
   </section>
 
   <section class="section" id="services">
-    <div class="section-title"><h2>CampusAlert Services</h2><p>These areas are being prepared for secure manual administration.</p></div>
+    <div class="section-title"><h2>CampusAlert Services</h2><p>Simple tools for campus information and communication.</p></div>
     <div class="grid">
-      <article class="card"><div class="symbol">🗒️</div><h3>Departmental Memos</h3><p class="muted">Department notices and memo sharing. The memo database and staff permissions are the next setup stage.</p></article>
-      <article class="card"><div class="symbol">📊</div><h3>Academic Results</h3><p class="muted">Private result updates visible only to the relevant student and authorised administrators after secure policies are added.</p></article>
-      <article class="card"><div class="symbol">🗂️</div><h3>Document Retrieval</h3><p class="muted">Approved files and academic documents, with access controlled by student or department permissions.</p></article>
-      <article class="card"><div class="symbol">💬</div><h3>WhatsApp Updates</h3><p class="muted">Manual WhatsApp sharing links can be added for announcements. No paid messaging automation is enabled.</p></article>
+      <article class="card"><div class="symbol">🗒️</div><h3>Departmental Memos</h3><p class="muted">Department notices and memo sharing.</p></article>
+      <article class="card"><div class="symbol">📊</div><h3>Academic Results</h3><p class="muted">Private result updates for the relevant student.</p></article>
+      <article class="card"><div class="symbol">🗂️</div><h3>Document Retrieval</h3><p class="muted">Approved files and academic documents.</p></article>
+      <article class="card"><div class="symbol">💬</div><h3>WhatsApp Updates</h3><p class="muted">Announcements can be shared manually through WhatsApp without paid messaging automation.</p></article>
     </div>
   </section>
 
@@ -147,7 +171,6 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
 
 <footer><strong>CampusAlert Group 11</strong><p>Connecting students with useful information.</p><p>Independent student information platform.</p><p>© 2026 CampusAlert Group 11</p></footer>
 
-<!-- Supabase browser client. The publishable key is designed for frontend use; database security must be enforced with RLS. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://hhkowoyawuerlrhjxtfd.supabase.co";
@@ -156,11 +179,20 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 
 const authPanel = document.getElementById("authPanel");
 const dashboard = document.getElementById("dashboard");
+const adminDashboard = document.getElementById("adminDashboard");
 const authStatus = document.getElementById("authStatus");
 const dashboardStatus = document.getElementById("dashboardStatus");
+let cachedPins = [];
+
 function showStatus(element, message, type="") {
   element.textContent = message;
   element.className = "status " + type;
+}
+
+function showSignedOut() {
+  authPanel.classList.remove("hidden");
+  dashboard.classList.add("hidden");
+  adminDashboard.classList.add("hidden");
 }
 
 document.getElementById("signupForm").addEventListener("submit", async (event) => {
@@ -173,37 +205,55 @@ document.getElementById("signupForm").addEventListener("submit", async (event) =
   const password = document.getElementById("signupPassword").value;
   const { error } = await supabaseClient.auth.signUp({
     email, password,
-    options: { data: { registration_number: registrationNumber } }
+    options: {
+      emailRedirectTo: "https://christian281107.github.io/campusalert-group11/",
+      data: { registration_number: registrationNumber }
+    }
   });
   button.disabled = false;
-  if (error) {
-    showStatus(authStatus, error.message, "error");
-  } else {
-    showStatus(authStatus, "Account created. Check your email and confirm your address before logging in. Your student record will be securely linked in the next database setup step.", "ok");
+  if (error) showStatus(authStatus, error.message, "error");
+  else {
+    showStatus(authStatus, "Account created. Check your email and confirm your address before logging in.", "ok");
     event.target.reset();
   }
 });
 
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
+  const button = document.getElementById("loginButton");
+  button.disabled = true;
   showStatus(authStatus, "Signing in...");
   const email = document.getElementById("loginEmail").value.trim();
   const password = document.getElementById("loginPassword").value;
   const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  button.disabled = false;
   if (error) showStatus(authStatus, error.message, "error");
-  else showStatus(authStatus, "Login successful.", "ok");
+  else {
+    showStatus(authStatus, "Login successful. Checking your account access...", "ok");
+    await refreshSession();
+  }
 });
 
 async function refreshSession() {
   const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
-    authPanel.classList.remove("hidden");
-    dashboard.classList.add("hidden");
+    showSignedOut();
     return;
   }
+
   authPanel.classList.add("hidden");
-  dashboard.classList.remove("hidden");
   const user = session.user;
+  const { data: isAdmin, error: adminCheckError } = await supabaseClient.rpc("is_campusalert_admin");
+
+  if (!adminCheckError && isAdmin === true) {
+    dashboard.classList.add("hidden");
+    adminDashboard.classList.remove("hidden");
+    document.getElementById("adminWelcome").textContent = "Signed in as administrator: " + (user.email || "");
+    return;
+  }
+
+  adminDashboard.classList.add("hidden");
+  dashboard.classList.remove("hidden");
   document.getElementById("welcomeText").textContent = "Signed in as " + (user.email || "student");
   const profile = document.getElementById("studentProfile");
   profile.textContent = "Checking your student record...";
@@ -213,6 +263,7 @@ async function refreshSession() {
     .eq("auth_user_id", user.id)
     .maybeSingle();
   const activationPanel = document.getElementById("activationPanel");
+
   if (error) {
     profile.textContent = "Your account is signed in, but the student record could not be loaded. Please contact the CampusAlert administrator.";
     activationPanel.classList.add("hidden");
@@ -220,13 +271,14 @@ async function refreshSession() {
   } else if (!data) {
     profile.textContent = "Your account is signed in, but your student record is not linked yet.";
     activationPanel.classList.remove("hidden");
-    showStatus(dashboardStatus, "Enter your registration number and one-time activation PIN.", "");
+    showStatus(dashboardStatus, adminCheckError ? "Admin check could not be completed; showing student access. " + adminCheckError.message : "Enter your registration number and one-time activation PIN.", "");
   } else {
     activationPanel.classList.add("hidden");
     profile.textContent = `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
     showStatus(dashboardStatus, "Student record loaded.", "ok");
   }
 }
+
 document.getElementById("activationForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("activateButton");
@@ -239,40 +291,16 @@ document.getElementById("activationForm").addEventListener("submit", async (even
     p_activation_pin: activationPin
   });
   button.disabled = false;
-  if (error) {
-    showStatus(dashboardStatus, error.message, "error");
-  } else if (data === true) {
+  if (error) showStatus(dashboardStatus, error.message, "error");
+  else if (data === true) {
     document.getElementById("activationForm").reset();
     showStatus(dashboardStatus, "Your student account has been activated successfully.", "ok");
     await refreshSession();
-  } else {
-    showStatus(dashboardStatus, "Activation could not be completed. Check your details and try again.", "error");
-  }
+  } else showStatus(dashboardStatus, "Activation could not be completed. Check your details and try again.", "error");
 });
 
-document.getElementById("logoutButton").addEventListener("click", async () => {
+async function logOut() {
   const { error } = await supabaseClient.auth.signOut();
-  if (error) showStatus(dashboardStatus, error.message, "error");
+  if (error) showStatus(authStatus, error.message, "error");
   else {
-    showStatus(authStatus, "You have logged out.", "ok");
-    await refreshSession();
-  }
-});
-supabaseClient.auth.onAuthStateChange(() => { refreshSession(); });
-refreshSession();
-
-// Front-page search for the current demonstration announcement cards.
-const searchInput = document.getElementById("search");
-searchInput.addEventListener("input", () => {
-  const query = searchInput.value.toLowerCase().trim();
-  let count = 0;
-  document.querySelectorAll(".announcement").forEach(card => {
-    const visible = card.innerText.toLowerCase().includes(query);
-    card.classList.toggle("hidden", !visible);
-    if (visible) count++;
-  });
-  document.getElementById("noResults").classList.toggle("hidden", count !== 0);
-});
-</script>
-</body>
-</html>
+    showStatus(a
