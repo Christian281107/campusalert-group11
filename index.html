@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -98,6 +99,17 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
         <h3>Student dashboard</h3>
         <p id="welcomeText" class="muted">You are signed in.</p>
         <div id="studentProfile" class="notice" style="margin:13px 0">Checking your linked student record...</div>
+        <div id="activationPanel" class="notice hidden" style="margin:13px 0">
+          <h3>Activate your student record</h3>
+          <p class="muted">After confirming your email and logging in, enter the registration number and one-time activation PIN issued for your student record.</p>
+          <form id="activationForm">
+            <label for="activationRegNo">Registration number</label>
+            <input id="activationRegNo" required autocomplete="off" placeholder="Your school registration number">
+            <label for="activationPin">16-character activation PIN</label>
+            <input id="activationPin" required minlength="16" maxlength="16" autocomplete="off" autocapitalize="characters" placeholder="Enter your activation PIN">
+            <button type="submit" id="activateButton">Activate student account</button>
+          </form>
+        </div>
         <p class="muted">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
         <button type="button" id="logoutButton" class="secondary">Log out</button>
         <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
@@ -200,17 +212,44 @@ async function refreshSession() {
     .select("full_name, registration_number, department, level, academic_session")
     .eq("auth_user_id", user.id)
     .maybeSingle();
+  const activationPanel = document.getElementById("activationPanel");
   if (error) {
     profile.textContent = "Your account is signed in, but the student record could not be loaded. Please contact the CampusAlert administrator.";
+    activationPanel.classList.add("hidden");
     showStatus(dashboardStatus, error.message, "error");
   } else if (!data) {
-    profile.textContent = "Your account is not yet linked to a student record. Please complete the secure student-record linking step with the administrator.";
-    showStatus(dashboardStatus, "Student record not linked yet.", "");
+    profile.textContent = "Your account is signed in, but your student record is not linked yet.";
+    activationPanel.classList.remove("hidden");
+    showStatus(dashboardStatus, "Enter your registration number and one-time activation PIN.", "");
   } else {
+    activationPanel.classList.add("hidden");
     profile.textContent = `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
     showStatus(dashboardStatus, "Student record loaded.", "ok");
   }
 }
+document.getElementById("activationForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("activateButton");
+  button.disabled = true;
+  showStatus(dashboardStatus, "Verifying your registration number and activation PIN...");
+  const registrationNumber = document.getElementById("activationRegNo").value.trim();
+  const activationPin = document.getElementById("activationPin").value.trim().toUpperCase();
+  const { data, error } = await supabaseClient.rpc("activate_student_account", {
+    p_registration_number: registrationNumber,
+    p_activation_pin: activationPin
+  });
+  button.disabled = false;
+  if (error) {
+    showStatus(dashboardStatus, error.message, "error");
+  } else if (data === true) {
+    document.getElementById("activationForm").reset();
+    showStatus(dashboardStatus, "Your student account has been activated successfully.", "ok");
+    await refreshSession();
+  } else {
+    showStatus(dashboardStatus, "Activation could not be completed. Check your details and try again.", "error");
+  }
+});
+
 document.getElementById("logoutButton").addEventListener("click", async () => {
   const { error } = await supabaseClient.auth.signOut();
   if (error) showStatus(dashboardStatus, error.message, "error");
