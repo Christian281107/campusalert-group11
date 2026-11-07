@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<meta name="description" content="CampusAlert is a student information and academic portal for campus announcements, departmental memos, student results, digital documents and academic updates.">
+<meta name="description" content="CampusAlert is a student information and academic portal for campus announcements, departmental memos, student results, digital documents and academic updates.">
 <meta name="keywords" content="CampusAlert, student information, academic portal, campus announcements, student results, departmental memos">
 <meta name="author" content="CampusAlert Group 11">
 <title>CampusAlert - Student Information and Academic Portal</title>
@@ -24,7 +24,7 @@ nav{display:flex;gap:15px;flex-wrap:wrap}nav a{color:var(--ink);font-size:13px;f
 input,select,textarea{width:100%;padding:12px;border:1px solid #d9e1ec;border-radius:8px;background:#fff;font:inherit;margin:5px 0 12px}
 button,.button{border:0;border-radius:8px;background:var(--primary);color:white;padding:11px 16px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
 button.secondary,.button.secondary{background:#eaf1fc;color:var(--primary)}
-button:disabled{opacity:.55;cursor:not-allowed}
+button.danger{background:#b42318}button:disabled{opacity:.55;cursor:not-allowed}
 .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .announcement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:15px}
 .tag{display:inline-block;background:#eaf1fc;color:var(--primary);font-size:11px;font-weight:bold;padding:4px 9px;border-radius:20px;margin-bottom:9px}
@@ -34,6 +34,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e8edf4;white-space:nowrap}th{color:var(--primary);background:#f7f9fc}
 footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin-top:45px}footer p{font-size:13px;color:#d5dfed;margin-top:5px}
 .team-member{background:#fff;padding:16px 10px;border-radius:10px;color:#183b68;font-weight:600;box-shadow:0 3px 12px #00000008}
+.announcement-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:650px){header{align-items:flex-start;flex-direction:column}nav{gap:11px}.hero{padding:45px 5%}}
 </style>
 </head>
@@ -59,7 +60,7 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
   </section>
 
   <section class="section" id="announcements">
-    <div class="section-title"><h2>Campus Announcements</h2><p>Demonstration posts are shown until the announcements table structure is connected.</p></div>
+    <div class="section-title"><h2>Campus Announcements</h2><p>Published announcements from CampusAlert administrators.</p></div>
     <div class="filters">
       <input id="search" type="search" placeholder="Search announcements..." aria-label="Search announcements">
       <select id="faculty"><option value="">All Faculties</option><option>Faculty of Physical Sciences</option><option>Faculty of Management Sciences</option><option>Faculty of Arts</option><option>Faculty of Health Sciences</option></select>
@@ -67,11 +68,10 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
       <select id="level"><option value="">All Levels</option><option>100 Level</option><option>200 Level</option><option>300 Level</option><option>400 Level</option><option>500 Level</option></select>
     </div>
     <div class="announcement-list" id="announcementList">
-      <article class="card announcement"><span class="tag">Platform update</span><h3>Welcome to CampusAlert</h3><p class="muted">This platform is designed to help students find relevant information and important campus announcements.</p><div class="meta">CampusAlert Group 11 · Demo post</div></article>
-      <article class="card announcement"><span class="tag">Student information</span><h3>Stay Informed</h3><p class="muted">Use CampusAlert to access information relevant to your studies and department.</p><div class="meta">CampusAlert Group 11 · Demo post</div></article>
-      <article class="card announcement"><span class="tag">General update</span><h3>Check Official Notices</h3><p class="muted">Please verify important school announcements through official school channels.</p><div class="meta">CampusAlert Group 11 · Demo post</div></article>
+      <div class="notice">Sign in with your student account to view published announcements.</div>
     </div>
     <p id="noResults" class="notice hidden">No matching announcements found.</p>
+    <p id="publicAnnouncementStatus" class="status" role="status" aria-live="polite"></p>
   </section>
 
   <section class="section" id="student-access">
@@ -96,8 +96,7 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
         <p class="muted">Administrators use their registered admin email and password here too.</p>
         <div id="authStatus" class="status" role="status" aria-live="polite"></div>
       </div>
-
-      <div class="card hidden" id="dashboard">
+<div class="card hidden" id="adminDashboard">
         <h3>Student dashboard</h3>
         <p id="welcomeText" class="muted">You are signed in.</p>
         <div id="studentProfile" class="notice" style="margin:13px 0">Checking your linked student record...</div>
@@ -112,15 +111,18 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
             <button type="submit" id="activateButton">Activate student account</button>
           </form>
         </div>
-        <p class="muted">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
+        <h3 style="margin-top:16px">Latest announcements</h3>
+        <div id="studentAnnouncementList" class="announcement-list">
+          <p class="muted">Loading announcements...</p>
+        </div>
+        <p class="muted" style="margin-top:14px">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
         <button type="button" id="logoutStudentButton" class="secondary">Log out</button>
         <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
       </div>
-
-      <div class="card hidden" id="adminDashboard">
         <h3>Administrator dashboard</h3>
         <p id="adminWelcome" class="muted">Administrator access confirmed.</p>
         <div class="notice" style="margin:13px 0">You are signed in with administrator permissions. Use this area to manage CampusAlert records.</div>
+
         <div class="card" style="margin:12px 0">
           <h3>Student activation PINs</h3>
           <p class="muted">This list contains unused activation PINs only. Keep it private and share each PIN only with its rightful student.</p>
@@ -132,8 +134,28 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
             <tbody id="pinsTableBody"></tbody>
           </table></div>
         </div>
+
+        <div class="card" style="margin:12px 0">
+          <h3>Manage Announcements</h3>
+          <form id="announcementForm">
+            <input type="hidden" id="announcementId">
+            <label for="announcementTitle">Announcement title</label>
+            <input type="text" id="announcementTitle" maxlength="200" required placeholder="Enter announcement title">
+            <label for="announcementContent">Announcement message</label>
+            <textarea id="announcementContent" rows="5" required placeholder="Write your announcement here"></textarea>
+            <label style="display:flex;align-items:center;gap:8px;margin:5px 0 12px">
+              <input type="checkbox" id="announcementPublished" style="width:auto;margin:0">
+              Publish immediately
+            </label>
+            <button type="submit" id="saveAnnouncementButton">Save announcement</button>
+            <button type="button" id="cancelAnnouncementEdit" class="secondary">Clear form</button>
+          </form>
+          <div id="announcementStatus" class="status" role="status" aria-live="polite"></div>
+          <h3 style="margin-top:18px">Existing announcements</h3>
+          <div id="adminAnnouncementList"><p class="muted">Loading announcements...</p></div>
+        </div>
+
         <div class="grid">
-          <div class="notice"><strong>Announcements</strong><br>Announcement management will be connected after confirming the announcements table.</div>
           <div class="notice"><strong>Departmental memos</strong><br>Memo sharing will be added with department-based access.</div>
           <div class="notice"><strong>Academic results</strong><br>Results will be private to each student and authorised administrators.</div>
           <div class="notice"><strong>Documents</strong><br>Document upload and retrieval will be connected to secure storage.</div>
@@ -185,82 +207,264 @@ const adminDashboard = document.getElementById("adminDashboard");
 const authStatus = document.getElementById("authStatus");
 const dashboardStatus = document.getElementById("dashboardStatus");
 let cachedPins = [];
+let publishedAnnouncements = [];
+let adminAnnouncements = [];
 
 function showStatus(element, message, type = "") {
   element.textContent = message;
   element.className = "status " + type;
 }
 
+function escapeText(value) {
+  return String(value ?? "");
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+}
+
 function showSignedOut() {
   authPanel.classList.remove("hidden");
   dashboard.classList.add("hidden");
   adminDashboard.classList.add("hidden");
+  document.getElementById("announcementList").innerHTML =
+    '<div class="notice">Sign in with your student account to view published announcements.</div>';
+  document.getElementById("studentAnnouncementList").innerHTML = "";
+  publishedAnnouncements = [];
+  filterAnnouncements();
 }
 
-async function refreshSession() {
-  try {
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
-    if (sessionError) throw sessionError;
+function renderAnnouncementCard(item, includeActions = false) {
+  const article = document.createElement("article");
+  article.className = "card announcement";
 
-    const session = sessionData.session;
-    if (!session) {
-      showSignedOut();
-      return;
-    }
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  tag.textContent = item.is_published ? "Published" : "Draft";
 
-    const user = session.user;
-    const { data: isAdmin, error: adminError } = await supabaseClient.rpc("is_campusalert_admin");
+  const heading = document.createElement("h3");
+  heading.textContent = escapeText(item.title);
 
-    if (adminError) {
-      showSignedOut();
-      showStatus(authStatus, "Administrator verification failed: " + adminError.message, "error");
-      return;
-    }
+  const message = document.createElement("p");
+  message.className = "muted";
+  message.style.whiteSpace = "pre-wrap";
+  message.textContent = escapeText(item.content);
 
-    if (isAdmin === true) {
-      authPanel.classList.add("hidden");
-      dashboard.classList.add("hidden");
-      adminDashboard.classList.remove("hidden");
-      document.getElementById("adminWelcome").textContent =
-        "Signed in as administrator: " + (user.email || "");
-      showStatus(authStatus, "Administrator access granted.", "ok");
-      return;
-    }
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = formatDate(item.created_at);
 
-    authPanel.classList.add("hidden");
-    adminDashboard.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-    document.getElementById("welcomeText").textContent =
-      "Signed in as " + (user.email || "student");
+  article.append(tag, heading, message, meta);
 
-    const profile = document.getElementById("studentProfile");
-    const activationPanel = document.getElementById("activationPanel");
-    profile.textContent = "Checking your student record...";
+  if (includeActions) {
+    const actions = document.createElement("div");
+    actions.className = "announcement-actions";
 
-    const { data, error } = await supabaseClient
-      .from("students")
-      .select("full_name, registration_number, department, level, academic_session")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "secondary";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => editAnnouncement(item));
 
-    if (error) throw error;
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", () => deleteAnnouncement(item.id));
 
-    if (!data) {
-      profile.textContent = "Your account is signed in, but your student record is not linked yet.";
-      activationPanel.classList.remove("hidden");
-      showStatus(dashboardStatus, "Enter your registration number and activation PIN.");
-      return;
-    }
-
-    activationPanel.classList.add("hidden");
-    profile.textContent =
-      `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
-    showStatus(dashboardStatus, "Student record loaded.", "ok");
-  } catch (error) {
-    showSignedOut();
-    showStatus(authStatus, error.message, "error");
+    actions.append(editButton, deleteButton);
+    article.appendChild(actions);
   }
+  return article;
 }
+
+function renderPublishedAnnouncements() {
+  const list = document.getElementById("announcementList");
+  const studentList = document.getElementById("studentAnnouncementList");
+  list.innerHTML = "";
+  studentList.innerHTML = "";
+
+  if (!publishedAnnouncements.length) {
+    list.innerHTML = '<div class="notice">There are no published announcements yet.</div>';
+    studentList.innerHTML = '<p class="muted">There are no published announcements yet.</p>';
+  } else {
+    publishedAnnouncements.forEach((item) => {
+      list.appendChild(renderAnnouncementCard(item));
+      studentList.appendChild(renderAnnouncementCard(item));
+    });
+  }
+  filterAnnouncements();
+}
+
+function filterAnnouncements() {
+  const searchText =document.getElementById("search").value.toLowerCase().trim();
+  const faculty = document.getElementById("faculty").value.toLowerCase();
+  const department = document.getElementById("department").value.toLowerCase();
+  const level = document.getElementById("level").value.toLowerCase();
+  const cards = document.querySelectorAll("#announcementList .announcement");
+  let visibleCount = 0;
+
+  cards.forEach((card) => {
+    const content = card.textContent.toLowerCase();
+    const visible = content.includes(searchText) &&
+      (!faculty || content.includes(faculty)) &&
+      (!department || content.includes(department)) &&
+      (!level || content.includes(level));
+    card.classList.toggle("hidden", !visible);
+    if (visible) visibleCount++;
+  });
+
+  document.getElementById("noResults").classList.toggle(
+    "hidden",
+    visibleCount > 0 || publishedAnnouncements.length === 0
+  );
+}
+
+async function loadPublishedAnnouncements() {
+  const list = document.getElementById("announcementList");
+  list.innerHTML = '<p class="muted">Loading published announcements...</p>';
+
+  const { data, error } = await supabaseClient
+    .from("announcements")
+    .select("id,title,content,is_published,created_at,updated_at")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.innerHTML = '<div class="notice">Announcements could not be loaded. Please sign in again or contact the administrator.</div>';
+    showStatus(document.getElementById("publicAnnouncementStatus"), error.message, "error");
+    return;
+  }
+
+  publishedAnnouncements = data || [];
+  showStatus(document.getElementById("publicAnnouncementStatus"), "");
+  renderPublishedAnnouncements();
+}
+
+async function loadAdminAnnouncements() {
+  const list = document.getElementById("adminAnnouncementList");
+  list.innerHTML = '<p class="muted">Loading announcements...</p>';
+
+  const { data, error } = await supabaseClient
+    .from("announcements")
+    .select("id,title,content,is_published,created_at,updated_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "Could not load announcements: " + error.message;
+    return;
+  }
+
+  adminAnnouncements = data || [];
+  list.innerHTML = "";
+
+  if (!adminAnnouncements.length) {
+    list.innerHTML = '<p class="muted">No announcements have been created yet.</p>';
+    return;
+  }
+
+  adminAnnouncements.forEach((item) => {
+    list.appendChild(renderAnnouncementCard(item, true));
+  });
+}
+
+function clearAnnouncementForm() {
+  document.getElementById("announcementForm").reset();
+  document.getElementById("announcementId").value = "";
+  document.getElementById("saveAnnouncementButton").textContent = "Save announcement";
+  showStatus(document.getElementById("announcementStatus"), "");
+}
+
+function editAnnouncement(item) {
+  document.getElementById("announcementId").value = item.id;
+  document.getElementById("announcementTitle").value = item.title || "";
+  document.getElementById("announcementContent").value = item.content || "";
+  document.getElementById("announcementPublished").checked = item.is_published === true;
+  document.getElementById("saveAnnouncementButton").textContent = "Update announcement";
+  document.getElementById("announcementForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function deleteAnnouncement(id) {
+  if (!window.confirm("Delete this announcement permanently?")) return;
+
+  showStatus(document.getElementById("announcementStatus"), "Deleting announcement...");
+  const { error } = await supabaseClient
+    .from("announcements")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    showStatus(document.getElementById("announcementStatus"), "Delete failed: " + error.message, "error");
+    return;
+  }
+
+  showStatus(document.getElementById("announcementStatus"), "Announcement deleted.", "ok");
+  await loadAdminAnnouncements();
+  await loadPublishedAnnouncements();
+}
+
+document.getElementById("announcementForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("saveAnnouncementButton");
+  const status = document.getElementById("announcementStatus");
+  button.disabled = true;
+  showStatus(status, "Saving announcement...");
+
+  try {
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error("Your session has expired. Please sign in again.");
+
+    const id = document.getElementById("announcementId").value;
+    const title = document.getElementById("announcementTitle").value.trim();
+    const content = document.getElementById("announcementContent").value.trim();
+    const isPublished = document.getElementById("announcementPublished").checked;
+
+    if (!title || !content) throw new Error("Please enter both a title and announcement message.");
+
+    const now = new Date().toISOString();
+    let result;
+
+    if (id) {
+      result = await supabaseClient
+        .from("announcements")
+        .update({
+          title,
+          content,
+          is_published: isPublished,
+          updated_at: now
+        })
+        .eq("id", id);
+    } else {
+      result = await supabaseClient
+        .from("announcements")
+        .insert({
+          id: crypto.randomUUID(),
+          title,
+          content,
+          is_published: isPublished,
+          created_by: userData.user.id,
+          created_at: now,
+          updated_at: now
+        });
+    }
+
+    if (result.error) throw result.error;
+
+    clearAnnouncementForm();
+    showStatus(status, id ? "Announcement updated successfully." : "Announcement created successfully.", "ok");
+    await loadAdminAnnouncements();
+    await loadPublishedAnnouncements();
+  } catch (error) {
+    showStatus(status, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("cancelAnnouncementEdit").addEventListener("click", clearAnnouncementForm);
 
 // Student registration
 document.getElementById("signupForm").addEventListener("submit", async (event) => {
@@ -282,7 +486,6 @@ document.getElementById("signupForm").addEventListener("submit", async (event) =
         data: { registration_number: registrationNumber }
       }
     });
-
     if (error) throw error;
     event.target.reset();
     showStatus(authStatus, "Account created. Check your email and verify your address.", "ok");
@@ -337,7 +540,7 @@ document.getElementById("activationForm").addEventListener("submit", async (even
       showStatus(dashboardStatus, "Student account activated successfully.", "ok");
       await refreshSession();
     } else {
-      showStatus(dashboardStatus, "Activation unsuccessful.","error");
+      showStatus(dashboardStatus, "Activation unsuccessful.", "error");
     }
   } catch (error) {
     showStatus(dashboardStatus, error.message, "error");
@@ -362,30 +565,17 @@ document.getElementById("loadPinsButton").addEventListener("click", async () => 
 
     cachedPins.forEach((student) => {
       const row = document.createElement("tr");
-
-      [
-        student.full_name,
-        student.registration_number,
-        student.department,
-        student.level,
-        student.activation_pin
-      ].forEach((value) => {
+      [student.full_name, student.registration_number, student.department, student.level, student.activation_pin].forEach((value) => {
         const cell = document.createElement("td");
         cell.textContent = value || "";
         row.appendChild(cell);
       });
-
       body.appendChild(row);
     });
 
     document.getElementById("pinsTable").classList.remove("hidden");
     document.getElementById("downloadPinsButton").classList.toggle("hidden", cachedPins.length === 0);
-
-    showStatus(
-      document.getElementById("pinsStatus"),
-      cachedPins.length + " unused student PIN(s) loaded.",
-      "ok"
-    );
+    showStatus(document.getElementById("pinsStatus"), cachedPins.length + " unused student PIN(s) loaded.", "ok");
   } catch (error) {
     showStatus(document.getElementById("pinsStatus"), error.message, "error");
   } finally {
@@ -394,36 +584,18 @@ document.getElementById("loadPinsButton").addEventListener("click", async () => 
 });
 
 // Download activation PINs as CSV
-document.getElementById("downloadPinsButton").addEventListener("click", () => {
+  document.getElementById("downloadPinsButton").addEventListener("click", () => {
   if (!cachedPins.length) return;
 
-  const columns = [
-    "Student name",
-    "Registration number",
-    "Department",
-    "Level",
-    "Activation PIN"
-  ];
-
+  const columns = ["Student name", "Registration number", "Department", "Level", "Activation PIN"];
   const rows = cachedPins.map((student) => [
-    student.full_name,
-    student.registration_number,
-    student.department,
-    student.level,
-    student.activation_pin
+    student.full_name, student.registration_number, student.department, student.level, student.activation_pin
   ]);
-
-  const csvCell = (value) =>
-    '"' + String(value ?? "").replace(/"/g, '""') + '"';
-
-  const csv = [columns, ...rows]
-    .map((row) => row.map(csvCell).join(","))
-    .join("\r\n");
-
+  const csvCell = (value) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+  const csv = [columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-
   link.href = url;
   link.download = "CampusAlert_Student_Activation_PINs.csv";
   document.body.appendChild(link);
@@ -435,13 +607,12 @@ document.getElementById("downloadPinsButton").addEventListener("click", () => {
 // Log out buttons
 async function logOut() {
   const { error } = await supabaseClient.auth.signOut();
-
   if (error) {
     showStatus(authStatus, error.message, "error");
     return;
   }
-
   cachedPins = [];
+  clearAnnouncementForm();
   showSignedOut();
   showStatus(authStatus, "You have logged out successfully.", "ok");
 }
@@ -450,45 +621,80 @@ document.getElementById("logoutStudentButton").addEventListener("click", logOut)
 document.getElementById("logoutAdminButton").addEventListener("click", logOut);
 
 // Search and filter announcements
-function filterAnnouncements() {
-  const searchText = document.getElementById("search").value.toLowerCase();
-  const faculty = document.getElementById("faculty").value.toLowerCase();
-  const department = document.getElementById("department").value.toLowerCase();
-  const level = document.getElementById("level").value.toLowerCase();
-
-  const announcements = document.querySelectorAll(".announcement");
-  let visibleCount = 0;
-
-  announcements.forEach((announcement) => {
-    const content = announcement.textContent.toLowerCase();
-
-    const matchesSearch = content.includes(searchText);
-    const matchesFaculty = !faculty || content.includes(faculty);
-    const matchesDepartment = !department || content.includes(department);
-    const matchesLevel = !level || content.includes(level);
-
-    const visible =
-      matchesSearch && matchesFaculty && matchesDepartment && matchesLevel;
-
-    announcement.classList.toggle("hidden", !visible);
-
-    if (visible) visibleCount++;
-  });
-
-  document.getElementById("noResults").classList.toggle("hidden", visibleCount > 0);
-}
-
 ["search", "faculty", "department", "level"].forEach((id) => {
   document.getElementById(id).addEventListener("input", filterAnnouncements);
   document.getElementById(id).addEventListener("change", filterAnnouncements);
 });
 
+// Refresh login state and load the correct dashboard
+async function refreshSession() {
+  try {
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const session = sessionData.session;
+    if (!session) {
+      showSignedOut();
+      return;
+    }
+
+    const user = session.user;
+    const { data: isAdmin, error: adminError } = await supabaseClient.rpc("is_campusalert_admin");
+
+    if (adminError) {
+      showSignedOut();
+      showStatus(authStatus, "Administrator verification failed: " + adminError.message, "error");
+      return;
+    }
+
+    if (isAdmin === true) {
+      authPanel.classList.add("hidden");
+      dashboard.classList.add("hidden");
+      adminDashboard.classList.remove("hidden");
+      document.getElementById("adminWelcome").textContent = "Signed in as administrator: " + (user.email || "");
+      showStatus(authStatus, "Administrator access granted.", "ok");
+      await loadAdminAnnouncements();
+      return;
+    }
+
+    authPanel.classList.add("hidden");
+    adminDashboard.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    document.getElementById("welcomeText").textContent = "Signed in as " + (user.email || "student");
+
+    const profile = document.getElementById("studentProfile");
+    const activationPanel = document.getElementById("activationPanel");
+    profile.textContent = "Checking your student record...";
+
+    const { data, error } = await supabaseClient
+      .from("students")
+      .select("full_name, registration_number, department, level, academic_session")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      profile.textContent = "Your account is signed in, but your student record is not linked yet.";
+      activationPanel.classList.remove("hidden");
+      showStatus(dashboardStatus, "Enter your registration number and activation PIN.");
+    } else {
+      activationPanel.classList.add("hidden");
+      profile.textContent = `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
+      showStatus(dashboardStatus, "Student record loaded.", "ok");
+    }
+
+    await loadPublishedAnnouncements();
+  } catch (error) {
+    showSignedOut();
+    showStatus(authStatus, error.message, "error");
+  }
+}
+
 // Restore an existing login session when the page opens
 let refreshingSession = false;
-
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (refreshingSession) return;
-
   refreshingSession = true;
   setTimeout(async () => {
     try {
