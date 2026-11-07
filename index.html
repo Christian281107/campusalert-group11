@@ -184,7 +184,7 @@ const authStatus = document.getElementById("authStatus");
 const dashboardStatus = document.getElementById("dashboardStatus");
 let cachedPins = [];
 
-function showStatus(element, message, type="") {
+function showStatus(element, message, type = "") {
   element.textContent = message;
   element.className = "status " + type;
 }
@@ -195,112 +195,310 @@ function showSignedOut() {
   adminDashboard.classList.add("hidden");
 }
 
+async function refreshSession() {
+  try {
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const session = sessionData.session;
+    if (!session) {
+      showSignedOut();
+      return;
+    }
+
+    const user = session.user;
+    const { data: isAdmin, error: adminError } = await supabaseClient.rpc("is_campusalert_admin");
+
+    if (adminError) {
+      showSignedOut();
+      showStatus(authStatus, "Administrator verification failed: " + adminError.message, "error");
+      return;
+    }
+
+    if (isAdmin === true) {
+      authPanel.classList.add("hidden");
+      dashboard.classList.add("hidden");
+      adminDashboard.classList.remove("hidden");
+      document.getElementById("adminWelcome").textContent =
+        "Signed in as administrator: " + (user.email || "");
+      showStatus(authStatus, "Administrator access granted.", "ok");
+      return;
+    }
+
+    authPanel.classList.add("hidden");
+    adminDashboard.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    document.getElementById("welcomeText").textContent =
+      "Signed in as " + (user.email || "student");
+
+    const profile = document.getElementById("studentProfile");
+    const activationPanel = document.getElementById("activationPanel");
+    profile.textContent = "Checking your student record...";
+
+    const { data, error } = await supabaseClient
+      .from("students")
+      .select("full_name, registration_number, department, level, academic_session")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      profile.textContent = "Your account is signed in, but your student record is not linked yet.";
+      activationPanel.classList.remove("hidden");
+      showStatus(dashboardStatus, "Enter your registration number and activation PIN.");
+      return;
+    }
+
+    activationPanel.classList.add("hidden");
+    profile.textContent =
+      `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
+    showStatus(dashboardStatus, "Student record loaded.", "ok");
+  } catch (error) {
+    showSignedOut();
+    showStatus(authStatus, error.message, "error");
+  }
+}
+
+// Student registration
 document.getElementById("signupForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("signupButton");
   button.disabled = true;
   showStatus(authStatus, "Creating your account...");
-  const registrationNumber = document.getElementById("regNo").value.trim();
-  const email = document.getElementById("signupEmail").value.trim();
-  const password = document.getElementById("signupPassword").value;
-  const { error } = await supabaseClient.auth.signUp({
-    email, password,
-    options: {
-      emailRedirectTo: "https://christian281107.github.io/campusalert-group11/",
-      data: { registration_number: registrationNumber }
-    }
-  });
-  button.disabled = false;
-  if (error) showStatus(authStatus, error.message, "error");
-  else {
-    showStatus(authStatus, "Account created. Check your email and confirm your address before logging in.", "ok");
+
+  try {
+    const registrationNumber = document.getElementById("regNo").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+
+    const { error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: "https://christian281107.github.io/campusalert-group11/",
+        data: { registration_number: registrationNumber }
+      }
+    });
+
+    if (error) throw error;
     event.target.reset();
+    showStatus(authStatus, "Account created. Check your email and verify your address.", "ok");
+  } catch (error) {
+    showStatus(authStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
   }
 });
 
+// Student and administrator login
 document.getElementById("loginForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("loginButton");
   button.disabled = true;
   showStatus(authStatus, "Signing in...");
-  const email = document.getElementById("loginEmail").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  button.disabled = false;
-  if (error) showStatus(authStatus, error.message, "error");
-  else {
-    showStatus(authStatus, "Login successful. Checking your account access...", "ok");
+
+  try {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     await refreshSession();
+  } catch (error) {
+    showSignedOut();
+    showStatus(authStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
   }
 });
 
-async function refreshSession() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (!session) {
-    showSignedOut();
-    return;
-  }
-
-  authPanel.classList.add("hidden");
-  const user = session.user;
-  const { data: isAdmin, error: adminCheckError } = await supabaseClient.rpc("is_campusalert_admin");
-
-  if (!adminCheckError && isAdmin === true) {
-    dashboard.classList.add("hidden");
-    adminDashboard.classList.remove("hidden");
-    document.getElementById("adminWelcome").textContent = "Signed in as administrator: " + (user.email || "");
-    return;
-  }
-
-  adminDashboard.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  document.getElementById("welcomeText").textContent = "Signed in as " + (user.email || "student");
-  const profile = document.getElementById("studentProfile");
-  profile.textContent = "Checking your student record...";
-  const { data, error } = await supabaseClient
-    .from("students")
-    .select("full_name, registration_number, department, level, academic_session")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-  const activationPanel = document.getElementById("activationPanel");
-
-  if (error) {
-    profile.textContent = "Your account is signed in, but the student record could not be loaded. Please contact the CampusAlert administrator.";
-    activationPanel.classList.add("hidden");
-    showStatus(dashboardStatus, error.message, "error");
-  } else if (!data) {
-    profile.textContent = "Your account is signed in, but your student record is not linked yet.";
-    activationPanel.classList.remove("hidden");
-    showStatus(dashboardStatus, adminCheckError ? "Admin check could not be completed; showing student access. " + adminCheckError.message : "Enter your registration number and one-time activation PIN.", "");
-  } else {
-    activationPanel.classList.add("hidden");
-    profile.textContent = `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
-    showStatus(dashboardStatus, "Student record loaded.", "ok");
-  }
-}
-
+// Student activation
 document.getElementById("activationForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("activateButton");
   button.disabled = true;
-  showStatus(dashboardStatus, "Verifying your registration number and activation PIN...");
-  const registrationNumber = document.getElementById("activationRegNo").value.trim();
-  const activationPin = document.getElementById("activationPin").value.trim().toUpperCase();
-  const { data, error } = await supabaseClient.rpc("activate_student_account", {
-    p_registration_number: registrationNumber,
-    p_activation_pin: activationPin
-  });
-  button.disabled = false;
-  if (error) showStatus(dashboardStatus, error.message, "error");
-  else if (data === true) {
-    document.getElementById("activationForm").reset();
-    showStatus(dashboardStatus, "Your student account has been activated successfully.", "ok");
-    await refreshSession();
-  } else showStatus(dashboardStatus, "Activation could not be completed. Check your details and try again.", "error");
+  showStatus(dashboardStatus, "Verifying activation details...");
+
+  try {
+    const registrationNumber = document.getElementById("activationRegNo").value.trim();
+    const activationPin = document.getElementById("activationPin").value.trim().toUpperCase();
+
+    const { data, error } = await supabaseClient.rpc("activate_student_account", {
+      p_registration_number: registrationNumber,
+      p_activation_pin: activationPin
+    });
+
+    if (error) throw error;
+
+    if (data === true) {
+      event.target.reset();
+      showStatus(dashboardStatus, "Student account activated successfully.", "ok");
+      await refreshSession();
+    } else {
+      showStatus(dashboardStatus, "Activation unsuccessful.","error");
+    }
+  } catch (error) {
+    showStatus(dashboardStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
 });
 
+// Load unused student activation PINs (administrator only)
+document.getElementById("loadPinsButton").addEventListener("click", async () => {
+  const button = document.getElementById("loadPinsButton");
+  button.disabled = true;
+  showStatus(document.getElementById("pinsStatus"), "Loading PINs...");
+
+  try {
+    const { data, error } = await supabaseClient.rpc("get_student_activation_codes");
+    if (error) throw error;
+
+    cachedPins = data || [];
+    const body = document.getElementById("pinsTableBody");
+    body.innerHTML = "";
+
+    cachedPins.forEach((student) => {
+      const row = document.createElement("tr");
+
+      [
+        student.full_name,
+        student.registration_number,
+        student.department,
+        student.level,
+        student.activation_pin
+      ].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value || "";
+        row.appendChild(cell);
+      });
+
+      body.appendChild(row);
+    });
+
+    document.getElementById("pinsTable").classList.remove("hidden");
+    document.getElementById("downloadPinsButton").classList.toggle("hidden", cachedPins.length === 0);
+
+    showStatus(
+      document.getElementById("pinsStatus"),
+      cachedPins.length + " unused student PIN(s) loaded.",
+      "ok"
+    );
+  } catch (error) {
+    showStatus(document.getElementById("pinsStatus"), error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Download activation PINs as CSV
+document.getElementById("downloadPinsButton").addEventListener("click", () => {
+  if (!cachedPins.length) return;
+
+  const columns = [
+    "Student name",
+    "Registration number",
+    "Department",
+    "Level",
+    "Activation PIN"
+  ];
+
+  const rows = cachedPins.map((student) => [
+    student.full_name,
+    student.registration_number,
+    student.department,
+    student.level,
+    student.activation_pin
+  ]);
+
+  const csvCell = (value) =>
+    '"' + String(value ?? "").replace(/"/g, '""') + '"';
+
+  const csv = [columns, ...rows]
+    .map((row) => row.map(csvCell).join(","))
+    .join("\r\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "CampusAlert_Student_Activation_PINs.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+});
+
+// Log out buttons
 async function logOut() {
   const { error } = await supabaseClient.auth.signOut();
-  if (error) showStatus(authStatus, error.message, "error");
-  else {
-    showStatus(a
+
+  if (error) {
+    showStatus(authStatus, error.message, "error");
+    return;
+  }
+
+  cachedPins = [];
+  showSignedOut();
+  showStatus(authStatus, "You have logged out successfully.", "ok");
+}
+
+document.getElementById("logoutStudentButton").addEventListener("click", logOut);
+document.getElementById("logoutAdminButton").addEventListener("click", logOut);
+
+// Search and filter announcements
+function filterAnnouncements() {
+  const searchText = document.getElementById("search").value.toLowerCase();
+  const faculty = document.getElementById("faculty").value.toLowerCase();
+  const department = document.getElementById("department").value.toLowerCase();
+  const level = document.getElementById("level").value.toLowerCase();
+
+  const announcements = document.querySelectorAll(".announcement");
+  let visibleCount = 0;
+
+  announcements.forEach((announcement) => {
+    const content = announcement.textContent.toLowerCase();
+
+    const matchesSearch = content.includes(searchText);
+    const matchesFaculty = !faculty || content.includes(faculty);
+    const matchesDepartment = !department || content.includes(department);
+    const matchesLevel = !level || content.includes(level);
+
+    const visible =
+      matchesSearch && matchesFaculty && matchesDepartment && matchesLevel;
+
+    announcement.classList.toggle("hidden", !visible);
+
+    if (visible) visibleCount++;
+  });
+
+  document.getElementById("noResults").classList.toggle("hidden", visibleCount > 0);
+}
+
+["search", "faculty", "department", "level"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", filterAnnouncements);
+  document.getElementById(id).addEventListener("change", filterAnnouncements);
+});
+
+// Restore an existing login session when the page opens
+let refreshingSession = false;
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (refreshingSession) return;
+
+  refreshingSession = true;
+  setTimeout(async () => {
+    try {
+      await refreshSession();
+    } finally {
+      refreshingSession = false;
+    }
+  }, 0);
+});
+
+// Check the current session when the page loads
+refreshSession();
+</script>
+</body>
+</html>
