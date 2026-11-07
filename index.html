@@ -116,8 +116,17 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
         <div id="studentAnnouncementList" class="announcement-list">
           <p class="muted">Loading announcements...</p>
         </div>
-        <p class="muted" style="margin-top:14px">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
-        <button type="button" id="logoutStudentButton" class="secondary">Log out</button>
+        <div class="card" style="margin:18px 0">
+          <h3>Academic Documents</h3>
+          <p class="muted">Download documents published for CampusAlert students.</p>
+          <div id="studentDocumentList" class="announcement-list">
+            <p class="muted">Loading documents...</p>
+          </div>
+          <p id="studentDocumentStatus" class="status" role="status" aria-live="polite"></p>
+        </div>
+        <p class="muted" style="margin-top:14px">Your results and departmental memos will appear here when their separate secure systems are added.</p>
+        <button type="button"
+          id="logoutStudentButton" class="secondary">Log out</button>
         <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
@@ -156,6 +165,30 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
           <div id="announcementStatus" class="status" role="status" aria-live="polite"></div>
           <h3 style="margin-top:18px">Existing announcements</h3>
           <div id="adminAnnouncementList"><p class="muted">Loading announcements...</p></div>
+        </div>
+
+        <div class="card" style="margin:12px 0">
+          <h3>Document Upload and Management</h3>
+          <p class="muted">Upload PDF, Word, Excel or PowerPoint files. Only published documents are visible to students.</p>
+          <form id="documentForm">
+            <label for="documentTitle">Document title</label>
+            <input id="documentTitle" type="text" maxlength="200" required placeholder="e.g. 2026 Academic Calendar">
+            <label for="documentDepartment">Department (optional)</label>
+            <input id="documentDepartment" type="text" maxlength="120" placeholder="e.g. Computer Science">
+            <label for="documentDescription">Description (optional)</label>
+            <textarea id="documentDescription" rows="3" maxlength="1000" placeholder="Briefly describe this document"></textarea>
+            <label for="documentFile">Choose document</label>
+            <input id="documentFile" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation">
+            <label style="display:flex;align-items:center;gap:8px;margin:5px 0 12px">
+              <input type="checkbox" id="documentPublished" checked style="width:auto;margin:0">
+              Publish for students
+            </label>
+            <button type="submit" id="uploadDocumentButton">Upload document</button>
+            <button type="button" id="clearDocumentForm" class="secondary">Clear form</button>
+          </form>
+          <div id="documentAdminStatus" class="status" role="status" aria-live="polite"></div>
+          <h3 style="margin-top:18px">Uploaded documents</h3>
+          <div id="adminDocumentList"><p class="muted">Loading documents...</p></div>
         </div>
 
         <div class="grid">
@@ -200,7 +233,8 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://hhkowoyawuerlrhjxtfd.supabase.co";
+const SUPABASE_URL =
+  "https://hhkowoyawuerlrhjxtfd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_W-lDmIXSA9cwsBOr0FQdSw_X9bsqRA7";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
@@ -271,8 +305,7 @@ function renderAnnouncementCard(item, includeActions = false) {
     editButton.textContent = "Edit";
     editButton.addEventListener("click", () => editAnnouncement(item));
 
-    const deleteButton =
-      document.createElement("button");
+    const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "danger";
     deleteButton.textContent = "Delete";
@@ -411,7 +444,8 @@ async function deleteAnnouncement(id) {
 
 document.getElementById("announcementForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = document.getElementById("saveAnnouncementButton");
+  const button =
+    document.getElementById("saveAnnouncementButton");
   const status = document.getElementById("announcementStatus");
   button.disabled = true;
   showStatus(status, "Saving announcement...");
@@ -461,6 +495,7 @@ document.getElementById("announcementForm").addEventListener("submit", async (ev
     showStatus(status, id ? "Announcement updated successfully." : "Announcement created successfully.", "ok");
     await loadAdminAnnouncements();
     await loadPublishedAnnouncements();
+    await loadStudentDocuments();
   } catch (error) {
     showStatus(status, error.message, "error");
   } finally {
@@ -470,8 +505,259 @@ document.getElementById("announcementForm").addEventListener("submit", async (ev
 
 document.getElementById("cancelAnnouncementEdit").addEventListener("click", clearAnnouncementForm);
 
+
+// CampusAlert private document library (Supabase Storage + documents table)
+const DOCUMENT_BUCKET = "campus-documents";
+const ALLOWED_DOCUMENT_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx"];
+
+function safeDocumentFileName(name) {
+  return String(name || "document").replace(/[^\w.\-() ]/g, "_").replace(/\s+/g, "_");
+}
+
+function documentExtension(name) {
+  const parts = String(name || "").toLowerCase().split(".");
+  return parts.length > 1 ? parts.pop() : "";
+}
+
+function clearDocumentForm() {
+  document.getElementById("documentForm").reset();
+  document.getElementById("documentPublished").checked = true;
+  showStatus(document.getElementById("documentAdminStatus"), "");
+}
+
+function makeDocumentCard(item, isAdmin = false) {
+  const card = document.createElement("article");
+  card.className = "card";
+
+  const title = document.createElement("h3");
+  title.textContent = item.title || item.file_name || "Untitled document";
+  card.appendChild(title);
+
+  if (item.department) {
+    const department = document.createElement("p");
+    department.className = "muted";
+    department.textContent = "Department: " + item.department;
+    card.appendChild(department);
+  }
+
+  if (item.description) {
+    const description = document.createElement("p");
+    description.className = "muted";
+    description.style.whiteSpace = "pre-wrap";
+    description.textContent = item.description;
+    card.appendChild(description);
+  }
+
+  const details = document.createElement("p");
+  details.className = "meta";
+  const sizeText = Number.isFinite(Number(item.file_size))
+    ? " · " + (Number(item.file_size) / 1024 / 1024).toFixed(2) + " MB"
+    : "";
+  details.textContent = (item.file_name || "File") + sizeText +
+    " · " + (item.is_published ? "Published" : "Draft") +
+    (item.created_at ? " · " + formatDate(item.created_at) : "");
+  card.appendChild(details);
+
+  const actions = document.createElement("div");
+  actions.className = "announcement-actions";
+
+  const downloadButton = document.createElement("button");
+  downloadButton.type = "button";
+  downloadButton.textContent = "Download";
+  downloadButton.addEventListener("click", () => downloadCampusDocument(item));
+  actions.appendChild(downloadButton);
+
+  if (isAdmin) {
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", () => deleteCampusDocument(item));
+    actions.appendChild(deleteButton);
+  }
+
+  card.appendChild(actions);
+  return card;
+}
+
+async function downloadCampusDocument(item) {
+  const status = document.getElementById("studentDocumentStatus");
+  showStatus(status, "Preparing document download...");
+  try {
+    const { data, error } = await supabaseClient.storage
+      .from(DOCUMENT_BUCKET)
+      .download(item.file_path);
+    if (error) throw error;
+
+    const objectUrl = URL.createObjectURL(data);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = item.file_name || "CampusAlert-document";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    showStatus(status, "Download started.", "ok");
+  } catch (error) {
+    showStatus(status, "Download failed: " + error.message, "error");
+  }
+}
+
+async function loadStudentDocuments() {
+  const list = document.getElementById("studentDocumentList");
+  const status = document.getElementById("studentDocumentStatus");
+  if (!list) return;
+  list.innerHTML = '<p class="muted">Loading published documents...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("documents")
+      .select("id,title,description,department,file_name,file_path,content_type,file_size,is_published,created_at")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    list.innerHTML = "";
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="muted">No documents have been published yet.</p>';
+    } else {
+      data.forEach((item) => list.appendChild(makeDocumentCard(item, false)));
+    }
+    showStatus(status, "");
+  } catch (error) {
+    list.innerHTML = '<p class="muted">Documents could not be loaded.</p>';
+    showStatus(status, error.message, "error");
+  }
+}
+
+async function loadAdminDocuments() {
+  const list = document.getElementById("adminDocumentList");
+  if (!list) return;
+  list.innerHTML = '<p class="muted">Loading documents...</p>';
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("documents")
+      .select("id,title,description,department,file_name,file_path,content_type,file_size,is_published,created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+
+    list.innerHTML = "";
+    if (!data || data.length === 0) {
+      list.innerHTML = '<p class="muted">No documents have been uploaded yet.</p>';
+    } else {
+      data.forEach((item) => list.appendChild(makeDocumentCard(item, true)));
+    }
+  } catch (error) {
+    list.textContent = "Could not load documents: " + error.message;
+  }
+}
+
+document.getElementById("documentForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("uploadDocumentButton");
+  const status = document.getElementById("documentAdminStatus");
+  const fileInput = document.getElementById("documentFile");
+  const file = fileInput.files && fileInput.files[0];
+
+  if (!file) {
+    showStatus(status, "Please choose a document file.", "error");
+    return;
+  }
+
+  const extension = documentExtension(file.name);
+  if (!ALLOWED_DOCUMENT_EXTENSIONS.includes(extension)) {
+    showStatus(status, "Please choose a PDF, Word, Excel or PowerPoint file.", "error");
+    return;
+  }
+
+  button.disabled = true;
+  showStatus(status, "Uploading document securely...");
+  let uploadedPath = "";
+
+  try {
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error("Your administrator session has expired. Please sign in again.");
+
+    const title = document.getElementById("documentTitle").value.trim();
+    const department = document.getElementById("documentDepartment").value.trim();
+    const description = document.getElementById("documentDescription").value.trim();
+    const isPublished = document.getElementById("documentPublished").checked;
+    if (!title) throw new Error("Please enter a document title.");
+
+    const storedName = safeDocumentFileName(file.name);
+    uploadedPath = userData.user.id + "/" + crypto.randomUUID() + "-" + storedName;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from(DOCUMENT_BUCKET)
+      .upload(uploadedPath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || "application/octet-stream"
+      });
+    if (uploadError) throw uploadError;
+
+    const { error: recordError } = await supabaseClient
+      .from("documents")
+      .insert({
+        title,
+        description: description || null,
+        department: department || null,
+        file_name: file.name,
+        file_path: uploadedPath,
+        content_type: file.type || null,
+        file_size: file.size,
+        is_published: isPublished,
+        uploaded_by: userData.user.id
+      });
+
+    if (recordError) {
+      await supabaseClient.storage.from(DOCUMENT_BUCKET).remove([uploadedPath]);
+      uploadedPath = "";
+      throw recordError;
+    }
+
+    clearDocumentForm();
+    showStatus(status, "Document uploaded successfully.", "ok");
+    await loadAdminDocuments();
+  } catch (error) {
+    showStatus(status, "Upload failed: " + error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("clearDocumentForm").addEventListener("click", clearDocumentForm);
+
+async function deleteCampusDocument(item) {
+  if (!window.confirm("Permanently delete this document and its stored file?")) return;
+
+  const status = document.getElementById("documentAdminStatus");
+  showStatus(status, "Deleting document...");
+  try {
+    const { error: fileError } = await supabaseClient.storage
+      .from(DOCUMENT_BUCKET)
+      .remove([item.file_path]);
+    if (fileError) throw fileError;
+
+    const { error: rowError } = await supabaseClient
+      .from("documents")
+      .delete()
+      .eq("id", item.id);
+    if (rowError) {
+      throw new Error("The file was removed, but its database record could not be deleted: " + rowError.message);
+    }
+
+    showStatus(status, "Document deleted.", "ok");
+    await loadAdminDocuments();
+  } catch (error) {
+    showStatus(status, "Delete failed: " + error.message, "error");
+  }
+}
+
 // Student registration
-  document.getElementById("signupForm").addEventListener("submit", async (event) => {
+document.getElementById("signupForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("signupButton");
   button.disabled = true;
@@ -509,7 +795,8 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 
   try {
     const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
+    const password =
+      document.getElementById("loginPassword").value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await refreshSession();
@@ -658,6 +945,7 @@ async function refreshSession() {
       document.getElementById("adminWelcome").textContent = "Signed in as administrator: " + (user.email || "");
       showStatus(authStatus, "Administrator access granted.", "ok");
       await loadAdminAnnouncements();
+      await loadAdminDocuments();
       return;
     }
 
