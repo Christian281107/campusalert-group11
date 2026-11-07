@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="CampusAlert is a student information and academic portal for campus announcements, departmental memos, student results, digital documents and academic updates.">
+<meta name="keywords" content="CampusAlert, student information, academic portal, campus announcements, student results, departmental memos">
+<meta name="author" content="CampusAlert Group 11">
+<title>CampusAlert - Student Information and Academic Portal</title>
+<style>
+:root{--primary:#123c75;--accent:#f0ad32;--bg:#f4f7fb;--ink:#18263a;--muted:#64748b;--white:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:#fff;padding:14px 6%;display:flex;align-items:center;justify-content:space-between;gap:15px;box-shadow:0 2px 10px #0001;position:sticky;top:0;z-index:5}
+.logo{font-size:21px;font-weight:800;color:var(--primary)}.logo span{color:var(--accent)}
+nav{display:flex;gap:15px;flex-wrap:wrap}nav a{color:var(--ink);font-size:13px;font-weight:bold;text-decoration:none}
+.hero{background:linear-gradient(120deg,#102e59,#2363a5);color:#fff;text-align:center;padding:58px 6%}
+.hero h1{font-size:clamp(30px,5vw,44px);margin-bottom:10px}.hero h1 span{color:#ffc65c}.hero p{max-width:680px;margin:auto;color:#e1eaf8}
+.container{max-width:1150px;margin:30px auto;padding:0 18px}
+.section{margin:34px 0}.section-title{margin-bottom:16px}.section-title h2{color:var(--primary);font-size:24px}.section-title p,.muted{color:var(--muted);font-size:14px}
+.features,.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{background:#fff;padding:21px;border-radius:12px;border:1px solid #e8edf4;box-shadow:0 3px 12px #00000008}
+.card h3{color:var(--primary);margin-bottom:7px}.symbol{font-size:27px;margin-bottom:7px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d9e1ec;border-radius:8px;background:#fff;font:inherit;margin:5px 0 12px}
+button,.button{border:0;border-radius:8px;background:var(--primary);color:white;padding:11px 16px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
+button.secondary,.button.secondary{background:#eaf1fc;color:var(--primary)}
+button.danger{background:#b42318}button:disabled{opacity:.55;cursor:not-allowed}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.announcement-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:15px}
+.tag{display:inline-block;background:#eaf1fc;color:var(--primary);font-size:11px;font-weight:bold;padding:4px 9px;border-radius:20px;margin-bottom:9px}
+.meta{font-size:12px;color:#8995a5;margin-top:12px}
+.notice{background:#eaf1fc;padding:16px;border-radius:10px;color:#42556d;font-size:14px}
+.hidden{display:none!important}.status{font-size:13px;margin:8px 0;min-height:20px}.status.error{color:#b42318}.status.ok{color:#147d45}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e8edf4;white-space:nowrap}th{color:var(--primary);background:#f7f9fc}
+footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin-top:45px}footer p{font-size:13px;color:#d5dfed;margin-top:5px}
+.team-member{background:#fff;padding:16px 10px;border-radius:10px;color:#183b68;font-weight:600;box-shadow:0 3px 12px #00000008}
+.announcement-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:650px){header{align-items:flex-start;flex-direction:column}nav{gap:11px}.hero{padding:45px 5%}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">CampusAlert <span>G11</span></div>
+  <nav>
+    <a href="#home">Home</a><a href="#announcements">Announcements</a><a href="#student-access">Portal</a>
+    <a href="#services">Services</a><a href="#about">About</a>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <h1>Welcome to <span>CampusAlert</span></h1>
+  <p>Your campus information centre. Find important announcements, academic updates and student information in one place.</p>
+</section>
+
+<main class="container">
+  <section class="features section">
+    <article class="card"><div class="symbol">📢</div><h3>Announcements</h3><p class="muted">Campus news and general student updates.</p></article>
+    <article class="card"><div class="symbol">🎓</div><h3>Academic Information</h3><p class="muted">Academic updates and results for authenticated students.</p></article>
+    <article class="card"><div class="symbol">📁</div><h3>Digital Documents</h3><p class="muted">A central place for approved departmental documents.</p></article>
+  </section>
+
+  <section class="section" id="announcements">
+    <div class="section-title"><h2>Campus Announcements</h2><p>Published announcements from CampusAlert administrators.</p></div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Search announcements..." aria-label="Search announcements">
+      <select id="faculty"><option value="">All Faculties</option><option>Faculty of Physical Sciences</option><option>Faculty of Management Sciences</option><option>Faculty of Arts</option><option>Faculty of Health Sciences</option></select>
+      <select id="department"><option value="">All Departments</option><option>Computer Science</option><option>Accountancy</option><option>Business Administration</option><option>Mass Communication</option><option>Public Health</option></select>
+      <select id="level"><option value="">All Levels</option><option>100 Level</option><option>200 Level</option><option>300 Level</option><option>400 Level</option><option>500 Level</option></select>
+    </div>
+    <div class="announcement-list" id="announcementList">
+      <div class="notice">Sign in with your student account to view published announcements.</div>
+    </div>
+    <p id="noResults" class="notice hidden">No matching announcements found.</p>
+    <p id="publicAnnouncementStatus" class="status" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="section" id="student-access">
+    <div class="section-title"><h2>CampusAlert Portal</h2><p>Students and administrators can sign in here. Students can create an account below.</p></div>
+    <div class="grid">
+      <div class="card" id="authPanel">
+        <h3>Student registration</h3>
+        <form id="signupForm">
+          <label for="regNo">Registration number</label><input id="regNo" required autocomplete="off" placeholder="Enter your registration number">
+          <label for="signupEmail">Your email address</label><input id="signupEmail" type="email" required autocomplete="email" placeholder="Enter your email">
+          <label for="signupPassword">Create password</label><input id="signupPassword" type="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters">
+          <button type="submit" id="signupButton">Create student account</button>
+        </form>
+        <p class="muted">Use an email address you can access to complete email verification.</p>
+        <hr style="border:0;border-top:1px solid #e8edf4;margin:17px 0">
+        <h3>Student / Administrator login</h3>
+        <form id="loginForm">
+          <label for="loginEmail">Email address</label><input id="loginEmail" type="email" required autocomplete="email" placeholder="Your registered email">
+          <label for="loginPassword">Password</label><input id="loginPassword" type="password" required autocomplete="current-password" placeholder="Your password">
+          <button type="submit" id="loginButton">Log in</button>
+        </form>
+        <p class="muted">Administrators use their registered admin email and password here too.</p>
+        <div id="authStatus" class="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="card hidden" id="dashboard">
+        <h3>Student dashboard</h3>
+        <p id="welcomeText" class="muted">You are signed in.</p>
+        <div id="studentProfile" class="notice" style="margin:13px 0">Checking your linked student record...</div>
+        <div id="activationPanel" class="notice hidden" style="margin:13px 0">
+          <h3>Activate your student record</h3>
+          <p class="muted">After confirming your email and logging in, enter the registration number and one-time activation PIN issued for your student record.</p>
+          <form id="activationForm">
+            <label for="activationRegNo">Registration number</label>
+            <input id="activationRegNo" required autocomplete="off" placeholder="Your school registration number">
+            <label for="activationPin">16-character activation PIN</label>
+            <input id="activationPin" required minlength="16" maxlength="16" autocomplete="off" autocapitalize="characters" placeholder="Enter your activation PIN">
+            <button type="submit" id="activateButton">Activate student account</button>
+          </form>
+        </div>
+        <h3 style="margin-top:16px">Latest announcements</h3>
+        <div id="studentAnnouncementList" class="announcement-list">
+          <p class="muted">Loading announcements...</p>
+        </div>
+        <p class="muted" style="margin-top:14px">Your results, departmental memos and private documents will appear here after their secure database tables and access policies are configured.</p>
+        <button type="button" id="logoutStudentButton" class="secondary">Log out</button>
+        <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
+      </div>
+
+      <div class="card hidden" id="adminDashboard">
+        <h3>Administrator dashboard</h3>
+        <p id="adminWelcome" class="muted">Administrator access confirmed.</p>
+        <div class="notice" style="margin:13px 0">You are signed in with administrator permissions. Use this area to manage CampusAlert records.</div>
+
+        <div class="card" style="margin:12px 0">
+          <h3>Student activation PINs</h3>
+          <p class="muted">This list contains unused activation PINs only. Keep it private and share each PIN only with its rightful student.</p>
+          <button type="button" id="loadPinsButton">Load unused student PINs</button>
+          <button type="button" id="downloadPinsButton" class="secondary hidden">Download PIN list (CSV)</button>
+          <div id="pinsStatus" class="status" role="status" aria-live="polite"></div>
+          <div class="table-wrap"><table id="pinsTable" class="hidden">
+            <thead><tr><th>Student name</th><th>Registration number</th><th>Department</th><th>Level</th><th>Activation PIN</th></tr></thead>
+            <tbody id="pinsTableBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="card" style="margin:12px 0">
+          <h3>Manage Announcements</h3>
+          <form id="announcementForm">
+            <input type="hidden" id="announcementId">
+            <label for="announcementTitle">Announcement title</label>
+            <input type="text" id="announcementTitle" maxlength="200" required placeholder="Enter announcement title">
+            <label for="announcementContent">Announcement message</label>
+            <textarea id="announcementContent" rows="5" required placeholder="Write your announcement here"></textarea>
+            <label style="display:flex;align-items:center;gap:8px;margin:5px 0 12px">
+              <input type="checkbox" id="announcementPublished" style="width:auto;margin:0">
+              Publish immediately
+            </label>
+            <button type="submit" id="saveAnnouncementButton">Save announcement</button>
+            <button type="button" id="cancelAnnouncementEdit" class="secondary">Clear form</button>
+          </form>
+          <div id="announcementStatus" class="status" role="status" aria-live="polite"></div>
+          <h3 style="margin-top:18px">Existing announcements</h3>
+          <div id="adminAnnouncementList"><p class="muted">Loading announcements...</p></div>
+        </div>
+
+        <div class="grid">
+          <div class="notice"><strong>Departmental memos</strong><br>Memo sharing will be added with department-based access.</div>
+          <div class="notice"><strong>Academic results</strong><br>Results will be private to each student and authorised administrators.</div>
+          <div class="notice"><strong>Documents</strong><br>Document upload and retrieval will be connected to secure storage.</div>
+        </div>
+        <button type="button" id="logoutAdminButton" class="secondary" style="margin-top:14px">Log out</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="services">
+    <div class="section-title"><h2>CampusAlert Services</h2><p>Simple tools for campus information and communication.</p></div>
+    <div class="grid">
+      <article class="card"><div class="symbol">🗒️</div><h3>Departmental Memos</h3><p class="muted">Department notices and memo sharing.</p></article>
+      <article class="card"><div class="symbol">📊</div><h3>Academic Results</h3><p class="muted">Private result updates for the relevant student.</p></article>
+      <article class="card"><div class="symbol">🗂️</div><h3>Document Retrieval</h3><p class="muted">Approved files and academic documents.</p></article>
+      <article class="card"><div class="symbol">💬</div><h3>WhatsApp Updates</h3><p class="muted">Announcements can be shared manually through WhatsApp without paid messaging automation.</p></article>
+    </div>
+  </section>
+
+  <section class="notice section" id="about">
+    <h3>About CampusAlert Group 11</h3>
+    <p>CampusAlert is an independent student information project designed to make important educational information easier to discover and access. It is not an official university administration website.</p>
+  </section>
+
+  <section class="section" id="campusalert-team">
+    <div class="section-title"><h2>Meet the CampusAlert Team</h2><p>The 15 students behind CampusAlert Group 11.</p></div>
+    <div class="features">
+      <div class="team-member">Aguene Peace</div><div class="team-member">Emenike Ifesinachi</div><div class="team-member">Onunze Chisom</div>
+      <div class="team-member">Uchenna Precious</div><div class="team-member">Onuonicha Obiamaka</div><div class="team-member">Anibogu Somtoo</div>
+      <div class="team-member">Omaba Jude</div><div class="team-member">Howells Carlos</div><div class="team-member">Ifeanyi Favour</div>
+      <div class="team-member">Ikeh Mirian</div><div class="team-member">Osadebe Benita</div><div class="team-member">Chikwelugo Amara</div>
+      <div class="team-member">Igboatuegwu Goodness</div><div class="team-member">Onuorah Blessing</div><div class="team-member">Mbanusi Christian</div>
+    </div>
+    <p class="muted" style="text-align:center;margin-top:15px">Together, connecting students with important information.</p>
+  </section>
+</main>
+
+<footer><strong>CampusAlert Group 11</strong><p>Connecting students with useful information.</p><p>Independent student information platform.</p><p>© 2026 CampusAlert Group 11</p></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://hhkowoyawuerlrhjxtfd.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_W-lDmIXSA9cwsBOr0FQdSw_X9bsqRA7";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const authPanel = document.getElementById("authPanel");
+const dashboard = document.getElementById("dashboard");
+const adminDashboard = document.getElementById("adminDashboard");
+const authStatus = document.getElementById("authStatus");
+const dashboardStatus = document.getElementById("dashboardStatus");
+let cachedPins = [];
+let publishedAnnouncements = [];
+let adminAnnouncements = [];
+
+function showStatus(element, message, type = "") {
+  element.textContent = message;
+  element.className = "status " + type;
+}
+
+function escapeText(value) {
+  return String(value ?? "");
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "" : date.toLocaleString();
+}
+
+function showSignedOut() {
+  authPanel.classList.remove("hidden");
+  dashboard.classList.add("hidden");
+  adminDashboard.classList.add("hidden");
+  document.getElementById("announcementList").innerHTML =
+    '<div class="notice">Sign in with your student account to view published announcements.</div>';
+  document.getElementById("studentAnnouncementList").innerHTML = "";
+  publishedAnnouncements = [];
+  filterAnnouncements();
+}
+
+function renderAnnouncementCard(item, includeActions = false) {
+  const article = document.createElement("article");
+  article.className = "card announcement";
+
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  tag.textContent = item.is_published ? "Published" : "Draft";
+
+  const heading = document.createElement("h3");
+  heading.textContent = escapeText(item.title);
+
+  const message = document.createElement("p");
+  message.className = "muted";
+  message.style.whiteSpace = "pre-wrap";
+  message.textContent = escapeText(item.content);
+
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.textContent = formatDate(item.created_at);
+
+  article.append(tag, heading, message, meta);
+
+  if (includeActions) {
+    const actions = document.createElement("div");
+    actions.className = "announcement-actions";
+
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "secondary";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => editAnnouncement(item));
+
+    const deleteButton =
+      document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "danger";
+    deleteButton.textContent = "Delete";
+    deleteButton.addEventListener("click", () => deleteAnnouncement(item.id));
+
+    actions.append(editButton, deleteButton);
+    article.appendChild(actions);
+  }
+  return article;
+}
+
+function renderPublishedAnnouncements() {
+  const list = document.getElementById("announcementList");
+  const studentList = document.getElementById("studentAnnouncementList");
+  list.innerHTML = "";
+  studentList.innerHTML = "";
+
+  if (!publishedAnnouncements.length) {
+    list.innerHTML = '<div class="notice">There are no published announcements yet.</div>';
+    studentList.innerHTML = '<p class="muted">There are no published announcements yet.</p>';
+  } else {
+    publishedAnnouncements.forEach((item) => {
+      list.appendChild(renderAnnouncementCard(item));
+      studentList.appendChild(renderAnnouncementCard(item));
+    });
+  }
+  filterAnnouncements();
+}
+
+function filterAnnouncements() {
+  const searchText = document.getElementById("search").value.toLowerCase().trim();
+  const faculty = document.getElementById("faculty").value.toLowerCase();
+  const department = document.getElementById("department").value.toLowerCase();
+  const level = document.getElementById("level").value.toLowerCase();
+  const cards = document.querySelectorAll("#announcementList .announcement");
+  let visibleCount = 0;
+
+  cards.forEach((card) => {
+    const content = card.textContent.toLowerCase();
+    const visible = content.includes(searchText) &&
+      (!faculty || content.includes(faculty)) &&
+      (!department || content.includes(department)) &&
+      (!level || content.includes(level));
+    card.classList.toggle("hidden", !visible);
+    if (visible) visibleCount++;
+  });
+
+  document.getElementById("noResults").classList.toggle(
+    "hidden",
+    visibleCount > 0 || publishedAnnouncements.length === 0
+  );
+}
+
+async function loadPublishedAnnouncements() {
+  const list = document.getElementById("announcementList");
+  list.innerHTML = '<p class="muted">Loading published announcements...</p>';
+
+  const { data, error } = await supabaseClient
+    .from("announcements")
+    .select("id,title,content,is_published,created_at,updated_at")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.innerHTML = '<div class="notice">Announcements could not be loaded. Please sign in again or contact the administrator.</div>';
+    showStatus(document.getElementById("publicAnnouncementStatus"), error.message, "error");
+    return;
+  }
+
+  publishedAnnouncements = data || [];
+  showStatus(document.getElementById("publicAnnouncementStatus"), "");
+  renderPublishedAnnouncements();
+}
+
+async function loadAdminAnnouncements() {
+  const list = document.getElementById("adminAnnouncementList");
+  list.innerHTML = '<p class="muted">Loading announcements...</p>';
+
+  const { data, error } = await supabaseClient
+    .from("announcements")
+    .select("id,title,content,is_published,created_at,updated_at")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "Could not load announcements: " + error.message;
+    return;
+  }
+
+  adminAnnouncements = data || [];
+  list.innerHTML = "";
+
+  if (!adminAnnouncements.length) {
+    list.innerHTML = '<p class="muted">No announcements have been created yet.</p>';
+    return;
+  }
+
+  adminAnnouncements.forEach((item) => {
+    list.appendChild(renderAnnouncementCard(item, true));
+  });
+}
+
+function clearAnnouncementForm() {
+  document.getElementById("announcementForm").reset();
+  document.getElementById("announcementId").value = "";
+  document.getElementById("saveAnnouncementButton").textContent = "Save announcement";
+  showStatus(document.getElementById("announcementStatus"), "");
+}
+
+function editAnnouncement(item) {
+  document.getElementById("announcementId").value = item.id;
+  document.getElementById("announcementTitle").value = item.title || "";
+  document.getElementById("announcementContent").value = item.content || "";
+  document.getElementById("announcementPublished").checked = item.is_published === true;
+  document.getElementById("saveAnnouncementButton").textContent = "Update announcement";
+  document.getElementById("announcementForm").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function deleteAnnouncement(id) {
+  if (!window.confirm("Delete this announcement permanently?")) return;
+
+  showStatus(document.getElementById("announcementStatus"), "Deleting announcement...");
+  const { error } = await supabaseClient
+    .from("announcements")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    showStatus(document.getElementById("announcementStatus"), "Delete failed: " + error.message, "error");
+    return;
+  }
+
+  showStatus(document.getElementById("announcementStatus"), "Announcement deleted.", "ok");
+  await loadAdminAnnouncements();
+  await loadPublishedAnnouncements();
+}
+
+document.getElementById("announcementForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("saveAnnouncementButton");
+  const status = document.getElementById("announcementStatus");
+  button.disabled = true;
+  showStatus(status, "Saving announcement...");
+
+  try {
+    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
+    if (userError) throw userError;
+    if (!userData.user) throw new Error("Your session has expired. Please sign in again.");
+
+    const id = document.getElementById("announcementId").value;
+    const title = document.getElementById("announcementTitle").value.trim();
+    const content = document.getElementById("announcementContent").value.trim();
+    const isPublished = document.getElementById("announcementPublished").checked;
+
+    if (!title || !content) throw new Error("Please enter both a title and announcement message.");
+
+    const now = new Date().toISOString();
+    let result;
+
+    if (id) {
+      result = await supabaseClient
+        .from("announcements")
+        .update({
+          title,
+          content,
+          is_published: isPublished,
+          updated_at: now
+        })
+        .eq("id", id);
+    } else {
+      result = await supabaseClient
+        .from("announcements")
+        .insert({
+          id: crypto.randomUUID(),
+          title,
+          content,
+          is_published: isPublished,
+          created_by: userData.user.id,
+          created_at: now,
+          updated_at: now
+        });
+    }
+
+    if (result.error) throw result.error;
+
+    clearAnnouncementForm();
+    showStatus(status, id ? "Announcement updated successfully." : "Announcement created successfully.", "ok");
+    await loadAdminAnnouncements();
+    await loadPublishedAnnouncements();
+  } catch (error) {
+    showStatus(status, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById("cancelAnnouncementEdit").addEventListener("click", clearAnnouncementForm);
+
+// Student registration
+  document.getElementById("signupForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("signupButton");
+  button.disabled = true;
+  showStatus(authStatus, "Creating your account...");
+
+  try {
+    const registrationNumber = document.getElementById("regNo").value.trim();
+    const email = document.getElementById("signupEmail").value.trim();
+    const password = document.getElementById("signupPassword").value;
+
+    const { error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: "https://christian281107.github.io/campusalert-group11/",
+        data: { registration_number: registrationNumber }
+      }
+    });
+    if (error) throw error;
+    event.target.reset();
+    showStatus(authStatus, "Account created. Check your email and verify your address.", "ok");
+  } catch (error) {
+    showStatus(authStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Student and administrator login
+document.getElementById("loginForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("loginButton");
+  button.disabled = true;
+  showStatus(authStatus, "Signing in...");
+
+  try {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    await refreshSession();
+  } catch (error) {
+    showSignedOut();
+    showStatus(authStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Student activation
+document.getElementById("activationForm").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("activateButton");
+  button.disabled = true;
+  showStatus(dashboardStatus, "Verifying activation details...");
+
+  try {
+    const registrationNumber = document.getElementById("activationRegNo").value.trim();
+    const activationPin = document.getElementById("activationPin").value.trim().toUpperCase();
+
+    const { data, error } = await supabaseClient.rpc("activate_student_account", {
+      p_registration_number: registrationNumber,
+      p_activation_pin: activationPin
+    });
+
+    if (error) throw error;
+
+    if (data === true) {
+      event.target.reset();
+      showStatus(dashboardStatus, "Student account activated successfully.", "ok");
+      await refreshSession();
+    } else {
+      showStatus(dashboardStatus, "Activation unsuccessful.", "error");
+    }
+  } catch (error) {
+    showStatus(dashboardStatus, error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Load unused student activation PINs (administrator only)
+document.getElementById("loadPinsButton").addEventListener("click", async () => {
+  const button = document.getElementById("loadPinsButton");
+  button.disabled = true;
+  showStatus(document.getElementById("pinsStatus"), "Loading PINs...");
+
+  try {
+    const { data, error } = await supabaseClient.rpc("get_student_activation_codes");
+    if (error) throw error;
+
+    cachedPins = data || [];
+    const body = document.getElementById("pinsTableBody");
+    body.innerHTML = "";
+
+    cachedPins.forEach((student) => {
+      const row = document.createElement("tr");
+      [student.full_name, student.registration_number, student.department, student.level, student.activation_pin].forEach((value) => {
+        const cell = document.createElement("td");
+        cell.textContent = value || "";
+        row.appendChild(cell);
+      });
+      body.appendChild(row);
+    });
+
+    document.getElementById("pinsTable").classList.remove("hidden");
+    document.getElementById("downloadPinsButton").classList.toggle("hidden", cachedPins.length === 0);
+    showStatus(document.getElementById("pinsStatus"), cachedPins.length + " unused student PIN(s) loaded.", "ok");
+  } catch (error) {
+    showStatus(document.getElementById("pinsStatus"), error.message, "error");
+  } finally {
+    button.disabled = false;
+  }
+});
+
+// Download activation PINs as CSV
+document.getElementById("downloadPinsButton").addEventListener("click", () => {
+  if (!cachedPins.length) return;
+
+  const columns = ["Student name", "Registration number", "Department", "Level", "Activation PIN"];
+  const rows = cachedPins.map((student) => [
+    student.full_name, student.registration_number, student.department, student.level, student.activation_pin
+  ]);
+  const csvCell = (value) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+  const csv = [columns, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "CampusAlert_Student_Activation_PINs.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+});
+
+// Log out buttons
+async function logOut() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) {
+    showStatus(authStatus, error.message, "error");
+    return;
+  }
+  cachedPins = [];
+  clearAnnouncementForm();
+  showSignedOut();
+  showStatus(authStatus, "You have logged out successfully.", "ok");
+}
+
+document.getElementById("logoutStudentButton").addEventListener("click", logOut);
+document.getElementById("logoutAdminButton").addEventListener("click", logOut);
+
+// Search and filter announcements
+["search", "faculty", "department", "level"].forEach((id) => {
+  document.getElementById(id).addEventListener("input", filterAnnouncements);
+  document.getElementById(id).addEventListener("change", filterAnnouncements);
+});
+
+// Refresh login state and load the correct dashboard
+async function refreshSession() {
+  try {
+    const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    const session = sessionData.session;
+    if (!session) {
+      showSignedOut();
+      return;
+    }
+
+    const user = session.user;
+    const { data: isAdmin, error: adminError } = await supabaseClient.rpc("is_campusalert_admin");
+
+    if (adminError) {
+      showSignedOut();
+      showStatus(authStatus, "Administrator verification failed: " + adminError.message, "error");
+      return;
+    }
+
+    if (isAdmin === true) {
+      authPanel.classList.add("hidden");
+      dashboard.classList.add("hidden");
+      adminDashboard.classList.remove("hidden");
+      document.getElementById("adminWelcome").textContent = "Signed in as administrator: " + (user.email || "");
+      showStatus(authStatus, "Administrator access granted.", "ok");
+      await loadAdminAnnouncements();
+      return;
+    }
+
+    authPanel.classList.add("hidden");
+    adminDashboard.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    document.getElementById("welcomeText").textContent = "Signed in as " + (user.email || "student");
+
+    const profile = document.getElementById("studentProfile");
+    const activationPanel = document.getElementById("activationPanel");
+    profile.textContent = "Checking your student record...";
+
+    const { data, error } = await supabaseClient
+      .from("students")
+      .select("full_name, registration_number, department, level, academic_session")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      profile.textContent = "Your account is signed in, but your student record is not linked yet.";
+      activationPanel.classList.remove("hidden");
+      showStatus(dashboardStatus, "Enter your registration number and activation PIN.");
+    } else {
+      activationPanel.classList.add("hidden");
+      profile.textContent = `${data.full_name} · ${data.registration_number} · ${data.department} · ${data.level} · Session: ${data.academic_session}`;
+      showStatus(dashboardStatus, "Student record loaded.", "ok");
+    }
+
+    await loadPublishedAnnouncements();
+  } catch (error) {
+    showSignedOut();
+    showStatus(authStatus, error.message, "error");
+  }
+}
+
+// Restore an existing login session when the page opens
+let refreshingSession = false;
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (refreshingSession) return;
+  refreshingSession = true;
+  setTimeout(async () => {
+    try {
+      await refreshSession();
+    } finally {
+      refreshingSession = false;
+    }
+  }, 0);
+});
+
+// Check the current session when the page loads
+refreshSession();
+</script>
+</body>
+</html>
