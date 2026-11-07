@@ -124,9 +124,8 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
           </div>
           <p id="studentDocumentStatus" class="status" role="status" aria-live="polite"></p>
         </div>
-        <p class="muted" style="margin-top:14px">Your results and departmental memos will appear here when their separate secure systems are added.</p>
-        <button type="button"
-          id="logoutStudentButton" class="secondary">Log out</button>
+        <p class="muted"style="margin-top:14px">Your results and departmental memos will appear here when their separate secure systems are added.</p>
+        <button type="button" id="logoutStudentButton" class="secondary">Log out</button>
         <div id="dashboardStatus" class="status" role="status" aria-live="polite"></div>
       </div>
 
@@ -233,8 +232,7 @@ footer{background:#102e59;color:white;text-align:center;padding:26px 15px;margin
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL =
-  "https://hhkowoyawuerlrhjxtfd.supabase.co";
+const SUPABASE_URL = "https://hhkowoyawuerlrhjxtfd.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_W-lDmIXSA9cwsBOr0FQdSw_X9bsqRA7";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
@@ -305,16 +303,42 @@ function renderAnnouncementCard(item, includeActions = false) {
     editButton.textContent = "Edit";
     editButton.addEventListener("click", () => editAnnouncement(item));
 
+    const shareButton = document.createElement("button");
+    shareButton.type = "button";
+    shareButton.className = "secondary";
+    shareButton.textContent = item.is_published ? "Share on WhatsApp" : "Publish to share";
+    shareButton.disabled = !item.is_published;
+    shareButton.title = item.is_published
+      ? "Share this published announcement through WhatsApp"
+      : "Publish this announcement before sharing it with students";
+    shareButton.addEventListener("click", () => shareAnnouncementOnWhatsApp(item));
+
     const deleteButton = document.createElement("button");
     deleteButton.type = "button";
     deleteButton.className = "danger";
     deleteButton.textContent = "Delete";
     deleteButton.addEventListener("click", () => deleteAnnouncement(item.id));
 
-    actions.append(editButton, deleteButton);
+    actions.append(editButton, shareButton, deleteButton);
     article.appendChild(actions);
   }
   return article;
+}
+
+function shareAnnouncementOnWhatsApp(item) {
+  if (!item || item.is_published !== true) {
+    showStatus(document.getElementById("announcementStatus"), "Publish this announcement before sharing it.", "error");
+    return;
+  }
+
+  const websiteUrl =
+    "https://christian281107.github.io/campusalert-group11/";
+  const shareText = "CAMPUSALERT ANNOUNCEMENT\n\n" +
+    (item.title || "CampusAlert Update") + "\n\n" +
+    (item.content || "") + "\n\n" +
+    "Read more on CampusAlert: " + websiteUrl;
+  const whatsappUrl = "https://wa.me/?text=" + encodeURIComponent(shareText);
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
 }
 
 function renderPublishedAnnouncements() {
@@ -444,8 +468,7 @@ async function deleteAnnouncement(id) {
 
 document.getElementById("announcementForm").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button =
-    document.getElementById("saveAnnouncementButton");
+  const button = document.getElementById("saveAnnouncementButton");
   const status = document.getElementById("announcementStatus");
   button.disabled = true;
   showStatus(status, "Saving announcement...");
@@ -550,7 +573,8 @@ function makeDocumentCard(item, isAdmin = false) {
 
   const details = document.createElement("p");
   details.className = "meta";
-  const sizeText = Number.isFinite(Number(item.file_size))
+  const sizeText =
+    Number.isFinite(Number(item.file_size))
     ? " · " + (Number(item.file_size) / 1024 / 1024).toFixed(2) + " MB"
     : "";
   details.textContent = (item.file_name || "File") + sizeText +
@@ -795,8 +819,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 
   try {
     const email = document.getElementById("loginEmail").value.trim();
-    const password =
-      document.getElementById("loginPassword").value;
+    const password = document.getElementById("loginPassword").value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
     await refreshSession();
@@ -809,7 +832,7 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
 });
 
 // Student activation
-document.getElementById("activationForm").addEventListener("submit", async (event) => {
+  document.getElementById("activationForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("activateButton");
   button.disabled = true;
